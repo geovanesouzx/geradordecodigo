@@ -142,6 +142,7 @@
         const suggestBtn = $('suggest-btn');
         const apiKeyInput = $('api-key-input'), saveApiKeyBtn = $('save-api-key-btn');
         const resultPanel = $('result-panel'), placeholderPanel = $('placeholder-panel');
+        let rawCode = '';
 
         const webLanguages = ['html', 'javascript', 'css', 'web'];
         let history = [];
@@ -203,8 +204,8 @@
                 } else {
                     fullPrompt = `Gere um trecho de código em ${selectedLanguage} que faça o seguinte: "${userPrompt}". O código deve ser bem comentado, completo e pronto para uso. Não inclua nenhuma introdução, explicação ou texto de conclusão fora do bloco de código. Apenas o código. Limpe o resultado removendo os marcadores de linguagem como \`\`\`${selectedLanguage} no início e \`\`\` no final.`;
                 }
-                const generatedCode = await generateContent(fullPrompt, apiKey);
-                codeOutput.textContent = generatedCode;
+                rawCode = await generateContent(fullPrompt, apiKey);
+                codeOutput.textContent = rawCode;
                 hljs.highlightElement(codeOutput);
                 addToHistory(userPrompt, selectedLanguage);
             } catch (error) {
@@ -237,7 +238,7 @@
         function showPreview() { updatePreview(); previewPane.classList.remove('hidden'); codePane.classList.add('hidden'); previewToggleBtn.textContent = 'Ver Código'; $('result-title').textContent = 'Preview'; copyBtn.classList.add('hidden'); }
         
         function updatePreview() {
-            const code = codeOutput.textContent, language = languageSelect.value;
+            const code = rawCode, language = languageSelect.value;
             let htmlContent = '';
             const buildHtml = (html, css, js) => `<!DOCTYPE html><html><head><style>${css}</style></head><body>${html}<script>${js.replace(/<\/script>/gi, '<\\/script>')}<\/script></body></html>`;
             switch (language) {
@@ -259,7 +260,7 @@
 
         function setLoadingState(isLoading) { generateBtn.disabled = isLoading; $('button-text').textContent = isLoading ? 'A Gerar...' : 'Gerar Código'; isLoading ? $('button-icon').classList.add('animate-spin') : $('button-icon').classList.remove('animate-spin'); }
         function showCopySuccessState() { const copyText = $('copy-text'), checkIcon = $('check-icon'), copyIcon = $('copy-icon'); copyIcon.classList.add('hidden'); checkIcon.classList.remove('hidden'); copyText.textContent = 'Copiado!'; setTimeout(() => { copyIcon.classList.remove('hidden'); checkIcon.classList.add('hidden'); copyText.textContent = 'Copiar'; }, 2000); }
-        copyBtn.addEventListener('click', () => { const codeToCopy = codeOutput.textContent; if (!codeToCopy) return; navigator.clipboard.writeText(codeToCopy).then(() => { const copyFeedback = $('copy-feedback'); copyFeedback.classList.remove('opacity-0'); setTimeout(() => copyFeedback.classList.add('opacity-0'), 2000); showCopySuccessState(); }).catch(err => console.error('Falha ao copiar:', err)); });
+        copyBtn.addEventListener('click', () => { const codeToCopy = rawCode; if (!codeToCopy) return; navigator.clipboard.writeText(codeToCopy).then(() => { const copyFeedback = $('copy-feedback'); copyFeedback.classList.remove('opacity-0'); setTimeout(() => copyFeedback.classList.add('opacity-0'), 2000); showCopySuccessState(); }).catch(err => console.error('Falha ao copiar:', err)); });
         
         function toggleTheme() { const isLight = document.body.classList.toggle('light'); localStorage.setItem('theme', isLight ? 'light' : 'dark'); updateThemeIcons(isLight); }
         function loadTheme() { const savedTheme = localStorage.getItem('theme') || 'dark'; const isLight = savedTheme === 'light'; document.body.classList.toggle('light', isLight); updateThemeIcons(isLight); }

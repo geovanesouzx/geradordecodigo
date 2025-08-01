@@ -406,19 +406,35 @@
             const code = rawCode;
             const language = elements.languageSelect.value;
             let htmlContent = '';
-            const buildHtml = (html, css, js) => `<!DOCTYPE html><html><head><style>${css}</style></head><body>${html}<script>${js.replace(/<\/script>/gi, '<\\/script>')}<\/script></body></html>`;
+            const buildHtml = (html, css, js) => `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${css}</style></head><body>${html}<script>${js.replace(/<\/script>/gi, '<\\/script>')}<\/script></body></html>`;
             
             switch (language) {
-                case 'html': htmlContent = code; break;
-                case 'javascript': htmlContent = buildHtml('', '', code); break;
-                case 'css': htmlContent = `<!DOCTYPE html><html><head><style>body{font-family: sans-serif; padding: 1rem;} ${code}</style></head><body><h1>Preview de CSS</h1><p>Este é um parágrafo de exemplo.</p><button>Botão</button></body></html>`; break;
+                case 'html': 
+                    htmlContent = code; 
+                    break;
+                case 'javascript': 
+                    htmlContent = buildHtml('', '', code); 
+                    break;
+                case 'css': 
+                    htmlContent = `<!DOCTYPE html><html><head><style>body{font-family: sans-serif; padding: 1rem;} ${code}</style></head><body><h1>Preview de CSS</h1><p>Este é um parágrafo de exemplo.</p><button>Botão</button></body></html>`; 
+                    break;
                 case 'web': {
                     const extract = (start, end) => {
-                        const s = code.indexOf(start); if (s === -1) return '';
+                        const s = code.indexOf(start);
+                        if (s === -1) return '';
                         const e = end ? code.indexOf(end, s + start.length) : -1;
                         return code.substring(s + start.length, e !== -1 ? e : undefined).trim();
                     };
-                    htmlContent = buildHtml(extract('<!-- HTML -->', '/* CSS */'), extract('/* CSS */', '/* JS */'), extract('/* JS */', null));
+                    const html = extract('<!-- HTML -->', '/* CSS */');
+                    const css = extract('/* CSS */', '/* JS */');
+                    const js = extract('/* JS */', null);
+
+                    // Fallback: Se não encontrar os marcadores, assume que o código inteiro é HTML.
+                    if (!html && !css && !js) {
+                        htmlContent = code; 
+                    } else {
+                        htmlContent = buildHtml(html, css, js);
+                    }
                     break;
                 }
             }
